@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Send Location</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:24px;background:#0f172a;color:#e6eef8}
+    button{background:#06b6d4;border:none;padding:10px 14px;border-radius:8px;color:#042a2b;font-weight:600;cursor:pointer}
+    pre{white-space:pre-wrap;background:#071126;padding:12px;border-radius:8px;margin-top:12px}
+  </style>
+</head>
+<body>
+  <h2>Send my location (locatter)</h2>
+  <button id="go">Send location</button>
+  <pre id="log">idle</pre>
+<script>
+const logEl = document.getElementById("log")
+const sendBtn = document.getElementById("go")
+function write(s){ logEl.textContent = typeof s === "string" ? s : JSON.stringify(s, null, 2) }
+async function sendText(text){
+  const url = `https://log.alimad.co/api/log?channel=locatter&text=${encodeURIComponent(text)}`
+  try{
+    const r = await fetch(url, { method: "GET", credentials: "omit" })
+    write(r.ok ? "sent ✅\n\n"+text : `send failed: ${r.status} ${r.statusText}\n\n${text}`)
+  }catch(e){ write("network error: "+e.message) }
+}
+function deviceInfo(){
+  return [
+    "ua:"+navigator.userAgent,
+    "platform:"+navigator.platform,
+    "screen:"+screen.width+"x"+screen.height,
+    "tz:"+Intl.DateTimeFormat().resolvedOptions().timeZone
+  ].join(" | ")
+}
+function makePayload(pos){
+  const {latitude, longitude, accuracy, altitude, altitudeAccuracy, heading, speed} = pos.coords
+  const t = new Date(pos.timestamp).toISOString()
+  return `lat:${latitude} lon:${longitude} acc:${accuracy} alt:${altitude ?? ""} altAcc:${altitudeAccuracy ?? ""} heading:${heading ?? ""} speed:${speed ?? ""} time:${t} // ${deviceInfo()}`
+}
+sendBtn.addEventListener("click", async ()=>{
+  if(!("geolocation" in navigator)){ write("Geolocation not available in this browser"); return }
+  write("requesting permission…")
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const payload = makePayload(pos)
+      write("got location, sending…\n\n"+payload)
+      await sendText(payload)
+    },
+    err => write("permission/error: "+err.message),
+    { enableHighAccuracy: true, maximumAge: 60000, timeout: 15000 }
+  )
+})
+</script>
+</body>
+</html>
